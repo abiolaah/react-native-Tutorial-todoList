@@ -1,24 +1,33 @@
-import { useState } from 'react'
+import { useState, useContext, useEffect } from 'react'
 import {
   Pressable,
   SafeAreaView,
   Text,
   TextInput,
-  StyleSheet,
-  FlatList,
   View,
   TouchableOpacity,
   Modal,
   Switch
 } from 'react-native'
 import DateTimePicker from '@react-native-community/datetimepicker'
+import Ionicons from '@expo/vector-icons/Ionicons'
+import Animated, { LinearTransition } from 'react-native-reanimated'
+import { StatusBar } from 'expo-status-bar'
+import AsyncStorage from '@react-native-async-storage/async-storage'
+import {
+  Inter_500Medium,
+  Inter_700Bold,
+  useFonts
+} from '@expo-google-fonts/inter'
 
 import { IconSymbol } from '@/components/ui/IconSymbol'
 
 import { data } from '@/data/todos'
+import createStyles from './styles'
+import { ThemeContext } from '../context/ThemeContext'
 
 export default function Index () {
-  const [todos, setTodos] = useState(data.sort((a, b) => b.id - a.id))
+  const [todos, setTodos] = useState([])
   const [newTodo, setNewTodo] = useState('')
   const [newTodoDescription, setNewTodoDescription] = useState('')
   const [isFormVisible, setFormVisible] = useState(false)
@@ -32,6 +41,50 @@ export default function Index () {
   const [time, setTime] = useState(new Date())
   const [isDatePickerVisible, setDatePickerVisible] = useState(false)
   const [isTimePickerVisible, setTimePickerVisible] = useState(false)
+  const { theme, colorScheme, setColorScheme } = useContext(ThemeContext)
+
+  const [loaded, error] = useFonts({
+    Inter_500Medium,
+    Inter_700Bold
+  })
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const jsonValue = await AsyncStorage.getItem('TodoApp')
+        const storageTodos = jsonValue != null ? JSON.parse(jsonValue) : null
+
+        if (storageTodos && storageTodos.length) {
+          setTodos(storageTodos.sort((a, b) => b.id - a.id))
+        } else {
+          setTodos(data.sort((a, b) => b.id - a.id))
+        }
+      } catch (e) {
+        console.error(e)
+      }
+    }
+
+    fetchData()
+  }, [data])
+
+  useEffect(() => {
+    const storeData = async () => {
+      try {
+        const jsonValue = JSON.stringify(todos)
+        await AsyncStorage.setItem('TodoApp', jsonValue)
+      } catch (e) {
+        console.error(e)
+      }
+    }
+
+    storeData()
+  }, [todos])
+
+  if (!loaded && !error) {
+    return null
+  }
+
+  const styles = createStyles(theme, colorScheme)
 
   const dateToggleSwitch = () => {
     setIsDateEnabled(previousState => !previousState)
@@ -341,18 +394,42 @@ export default function Index () {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Text>To-Do List.</Text>
-      <FlatList
-        // data={todos}
+      <View style={styles.header}>
+        <Text style={styles.title}>To-Do List.</Text>
+        <Pressable
+          onPress={() =>
+            setColorScheme(colorScheme === 'light' ? 'dark' : 'light')
+          }
+          style={{ marginLeft: 10 }}
+        >
+          {colorScheme === 'dark' ? (
+            <Ionicons
+              name='moon'
+              size={24}
+              color={theme.text}
+              style={{ width: 36 }}
+            />
+          ) : (
+            <Ionicons
+              name='sunny-outline'
+              size={24}
+              color={theme.text}
+              style={{ width: 36 }}
+            />
+          )}
+        </Pressable>
+      </View>
+      <Animated.FlatList
         data={
           isFormVisible ? [{ id: 'newForm', isForm: true }, ...todos] : todos
         }
-        // renderItem={renderItem}
         renderItem={({ item }) =>
           item.isForm ? renderNewItemForm() : renderItem({ item })
         }
         keyExtractor={todo => String(todo.id)}
         contentContainerStyle={{ flexGrow: 1 }}
+        itemLayoutAnimation={LinearTransition}
+        keyboardDismissMode='on-drag'
       />
 
       {isDrawerVisible && renderDrawer()}
@@ -365,190 +442,8 @@ export default function Index () {
           <IconSymbol size={28} name='plus.circle' />
           <Text style={styles.formButtonText}>New Todo</Text>
         </Pressable>
-        {/* {isFormVisible && renderNewItemForm()} */}
       </View>
+      <StatusBar style={colorScheme === 'dark' ? 'light' : 'dark'} />
     </SafeAreaView>
   )
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: 'black',
-    padding: 16
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 20
-  },
-  inputContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#333',
-    borderRadius: 8,
-    padding: 10,
-    marginBottom: 10
-  },
-  input: {
-    // flex: 1,
-    borderBottomWidth: 1,
-    borderRadius: 8,
-    borderBottomColor: '#555',
-    // padding: 10,
-    padding: 8,
-    // marginRight: 10,
-    marginBottom: 8,
-    fontSize: 18,
-    color: 'white'
-  },
-  addButton: {
-    backgroundColor: 'white',
-    borderRadius: 5,
-    padding: 10
-  },
-  addButtonText: {
-    fontSize: 18,
-    color: 'black'
-  },
-  formButton: {
-    padding: 10,
-    flexDirection: 'row',
-    gap: 8,
-    alignItems: 'center'
-  },
-  formButtonText: {
-    fontSize: 18,
-    color: '#1d7bf7'
-  },
-  todoItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    // gap: 4,
-    padding: 10,
-    borderBottomColor: 'gray',
-    borderBottomWidth: 1
-  },
-  todoText: {
-    flex: 1,
-    fontSize: 18,
-    color: 'white'
-  },
-  todoDescriptionText: {
-    flex: 1,
-    fontSize: 10,
-    color: 'white'
-  },
-  textContainer: {
-    flex: 1,
-    marginHorizontal: 10,
-    ontSize: 18,
-    color: 'white'
-  },
-  editInput: {
-    color: 'white',
-    borderBottomWidth: 1,
-    borderBottomColor: 'gray',
-    padding: 5
-  },
-  infoButton: {
-    marginHorizontal: 5
-  },
-  drawerBackdrop: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.75)',
-    justifyContent: 'flex-end',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 12
-  },
-  drawerContainer: {
-    backgroundColor: '#222323',
-    borderTopLeftRadius: 12,
-    borderTopRightRadius: 12,
-    borderBottomLeftRadius: 12,
-    borderBottomRightRadius: 12,
-    padding: 20,
-    height: '70%',
-    marginTop: 10,
-    marginBottom: 10
-  },
-  drawerTitle: {
-    fontSize: 20,
-    fontWeight: 'bold',
-    color: 'white',
-    marginBottom: 10
-  },
-  drawerInput: {
-    borderWidth: 1,
-    borderColor: 'gray',
-    borderRadius: 5,
-    padding: 10,
-    fontSize: 16,
-    marginBottom: 15
-  },
-  drawerCloseButton: {
-    alignItems: 'center',
-    padding: 10,
-    borderRadius: 5
-  },
-  drawerCloseButtonText: {
-    color: '#1d7bf7',
-    fontSize: 18
-  },
-  button: {
-    padding: 8,
-    borderRadius: 5
-  },
-  toggleButton: {
-    backgroundColor: 'white',
-    borderRadius: 10,
-    padding: 10
-  },
-  toggleButtonComplete: {
-    backgroundColor: 'green'
-  },
-  completedText: {
-    textDecorationLine: 'line-through',
-    color: 'gray'
-  },
-  dateTimeButton: {
-    flexDirection: 'column',
-    width: '100%',
-    justifyContent: 'space-between'
-  },
-  dateView: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    margin: 10
-  },
-  dateSwitchView: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    margin: 10
-  },
-  timeView: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    margin: 10
-  },
-  dateText: {
-    fontSize: 24,
-    color: 'white',
-    fontWeight: 'bold'
-  },
-  dateValueText: {
-    fontSize: 14,
-    color: 'white'
-  },
-  timeText: {
-    fontSize: 24,
-    color: 'white',
-    fontWeight: 'bold'
-  },
-  timeValueText: {
-    fontSize: 12,
-    color: 'white'
-  }
-})
