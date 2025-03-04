@@ -45,6 +45,7 @@ To learn more about developing your project with Expo, look at the following res
 - Lesson_5:crud_app_start branch is about getting started with CRUD operation in react native app
 - Lesson_6:crud_app_data_storage branch is about using local storage with CRUD operation in react native app
 - Lesson_7:crud_app_dynamic branch is about dynamic routing with CRUD operation in react native app
+- Lesson_8:crud_app_EAS branch is about dynamic routing with CRUD operation in react native app
 
 ## Join the community
 
@@ -52,3 +53,8 @@ Join our community of developers creating universal apps.
 
 - [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
 - [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+
+
+export NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && \. "$NVM_DIR/nvm.sh"  # This loads nvm
+[ -s "$NVM_DIR/bash_completion" ] && \. "$NVM_DIR/bash_completion"  # This loads nvm bash_completion
