@@ -43,7 +43,8 @@ To learn more about developing your project with Expo, look at the following res
 - [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
 - The repo is built by following a tutorial by [@DaveGrayTeachesCode](https://www.youtube.com/@DaveGrayTeachesCode) on [freeCodeCamp's Youtube](https://www.youtube.com/@freecodecamp) starting from Lesson 5
 - Lesson_5:crud_app_start branch is about getting started with CRUD operation in react native app
-- Lesson_6:crud_app_data_storage branch is about getting started with CRUD operation in react native app
+- Lesson_6:crud_app_data_storage branch is about using local storage with CRUD operation in react native app
+- Lesson_7:crud_app_dynamic branch is about dynamic routing with CRUD operation in react native app
 
 ## Join the community
 
