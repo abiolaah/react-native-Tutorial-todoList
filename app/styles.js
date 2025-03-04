@@ -7,6 +7,14 @@ return StyleSheet.create({
       backgroundColor: theme.background,
       padding: 16
     },
+    newItemContainer: {
+      flexDirection: 'row',
+      alignItems: 'center',
+      padding: 10,
+      marginBottom: 8,
+      borderBottomWidth: 1,
+    },
+    
     header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
