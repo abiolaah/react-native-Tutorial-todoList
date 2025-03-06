@@ -5,10 +5,9 @@ import {
   Text,
   TextInput,
   View,
-  TouchableOpacity,
-  Modal,
-  Switch
+  TouchableOpacity
 } from 'react-native'
+import { useRouter } from 'expo-router'
 import Animated, { LinearTransition } from 'react-native-reanimated'
 import { StatusBar } from 'expo-status-bar'
 import AsyncStorage from '@react-native-async-storage/async-storage'
@@ -23,16 +22,15 @@ import { IconSymbol } from '@/components/ui/IconSymbol'
 import { data } from '@/data/todos'
 import createStyles from './styles'
 import { ThemeContext } from '../context/ThemeContext'
-import NewItemForm from '../components/custom/NewItemForm'
-import ItemsList from '../components/custom/ItemsList'
-import InfoDrawer from '../components/custom/InfoDrawer'
+
 
 export default function Index () {
   const [todos, setTodos] = useState([])
   const [newTodo, setNewTodo] = useState('')
   const [isFormVisible, setFormVisible] = useState(false)
-  const [isDrawerVisible, setDrawerVisible] = useState(false)
   const { theme, colorScheme, setColorScheme } = useContext(ThemeContext)
+
+  const router = useRouter();
 
   const [loaded, error] = useFonts({
     Inter_500Medium,
@@ -77,6 +75,16 @@ export default function Index () {
 
   const styles = createStyles(theme, colorScheme)
 
+  // function to change date
+  const onDateChange = (event, selectedDate) => {
+    setDate(selectedDate)
+  }
+
+  // function to change time
+  const onTimeChange = (event, selectedTime) => {
+    setTime(selectedTime)
+  }
+
   // function to add a new todo
   const addTodo = () => {
     if (newTodo.trim()) {
@@ -86,6 +94,75 @@ export default function Index () {
       setFormVisible(false)
     }
   }
+
+  // delete a todo from the todo list
+  const deleteTodo = id => {
+    setTodos(todos.filter(todo => todo.id !== id))
+  }
+
+
+  // edit a todo for complete status
+  const toggleTodo = id => {
+    setTodos(
+      todos.map(todo =>
+        todo.id === id ? { ...todo, completed: !todo.completed } : todo
+      )
+    )
+  }
+
+  // handle dynamic routing
+  const handlePress = (id) => {
+    router.push(`/todos/${id}`)
+  }
+
+  const renderNewItemForm = () => (
+    <View style={[styles.inputContainer, styles.newItemContainer]}>
+        <TextInput
+          style={styles.input}
+          maxLength={30}
+          value={newTodo}
+          onChangeText={setNewTodo}
+          placeholder='New Todo Title'
+          placeholderTextColor='#777'
+        />
+        <Pressable onPress={addTodo} style={styles.addButton}>
+          <Text style={styles.addButtonText}>Add</Text>
+        </Pressable>
+    </View>
+  )
+
+  const renderItem = ({ item }) => (
+    <View style={styles.todoItem}>
+      {/* Toggle Button */}
+      <TouchableOpacity onPress={() => toggleTodo(item.id)} style={[styles.button, styles.toggleButton, item.completed && styles.toggleButtonComplete]}/>
+        {/* Editable Text */}
+        <TouchableOpacity style={[styles.button, styles.textContainer]}>
+          <Text style={[styles.todoText, item.completed && styles.completedText]}>
+            {item.title}
+          </Text>
+        </TouchableOpacity>
+            
+                  {/* Edit button */}
+                  <TouchableOpacity onPress={() => {handlePress(item.id)}} style={[styles.button, styles.infoButton]}>
+                  <IconSymbol size={28} name='slider.horizontal.3' style={styles.editButton} selectable={undefined} />
+                  </TouchableOpacity>
+            
+                  {/* Delete Button */}
+                  <TouchableOpacity
+                    onPress={() => deleteTodo(item.id)}
+                    style={[styles.button, styles.deleteButton]}
+                  >
+                    <IconSymbol
+                      color={'red'}
+                      size={28}
+                      library="Ionicons"
+                      name='trash.fill'
+                      style={styles.deleteButton}
+                      selectable={undefined}
+                    />
+                  </TouchableOpacity>
+            </View>
+  )
 
   return (
     <SafeAreaView style={styles.container}>
@@ -106,17 +183,18 @@ export default function Index () {
             />
         </Pressable>
       </View>
-      <Animated.FlatList 
-      data={isFormVisible ? [{ id: 'newForm', isForm: true }, ...todos] : todos}
-      renderItem={({item}) => 
-        item.isForm ? (<NewItemForm styles={styles} todos={todos} setTodos={setTodos} setFormVisible={setFormVisible}/>): (<ItemsList item={item} todos={todos} setTodos={setTodos} styles={styles} setDrawerVisible={setDrawerVisible}/>)
-      }
-      keyExtractor={todo => String(todo.id)}
-      contentContainerStyle={{ flexGrow: 1 }}
-      itemLayoutAnimation={LinearTransition}
-      keyboardDismissMode='on-drag' />
-
-      {isDrawerVisible && (<InfoDrawer styles={styles} isDrawerVisible={isDrawerVisible} setDrawerVisible={setDrawerVisible}/>)}
+      <Animated.FlatList
+        data={
+          isFormVisible ? [{ id: 'newForm', isForm: true }, ...todos] : todos
+        }
+        renderItem={({ item }) =>
+          item.isForm ? renderNewItemForm() : renderItem({ item })
+        }
+        keyExtractor={todo => String(todo.id)}
+        contentContainerStyle={{ flexGrow: 1 }}
+        itemLayoutAnimation={LinearTransition}
+        keyboardDismissMode='on-drag'
+      />
 
       <View>
         <Pressable
